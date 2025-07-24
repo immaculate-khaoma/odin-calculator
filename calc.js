@@ -1,6 +1,6 @@
 let currentValue = '';
 let previousValue = '';
-let operator = null;
+let operator = '';
 
 // function for the arithmetics
 function add (num1,num2){
@@ -61,10 +61,20 @@ numBtn.forEach(button => {
 operatorBtn.forEach(button => {
   button.addEventListener('click', function(e){
     if(currentValue === "Error") return;
-    //calculator evaluate a single pair of numbers at a time
+    //iif expression is complete compute it
     if(previousValue !== '' && currentValue !== '' && operator){
       calculate();
+      previousValue = currentValue;
+      currentValue = '';
     }
+    //allow chaining operator if we have previousValue and no
+    const newOperator = e.target.textContent;
+    if (previousValue !== '' && currentValue === '') {
+      operator = newOperator;
+      updateDisplay();
+      return;
+    }
+
     appendOperator(e.target.textContent);
     previousDisplay.textContent = previousValue + "" + operator;
     currentDisplay.textContent = currentValue;
@@ -85,7 +95,7 @@ decimalBtn.addEventListener('click',function(e){
 deleteBtn.addEventListener('click',()=> {
   previousValue = '';
   currentValue = '';
-  operator = null;
+  operator = '';
   currentDisplay.textContent = currentValue;
   previousDisplay.textContent = currentValue;
 }); 
@@ -100,6 +110,7 @@ backBtn.addEventListener('click',()=>{
 //function to update display
 function updateDisplay() {
   currentDisplay.textContent = currentValue;
+  previousDisplay.textContent = previousValue + "" + operator;
 };
 
 //function to display number on button click
@@ -116,33 +127,50 @@ function appendOperator(op) {
   operator = op;
   previousValue = currentValue;
   currentValue = '';
+
+  equalsBtn.disabled = false; //reenable equals if user clicks operator
 } ;
+
 
 //calculation logic function
 function calculate() {
   if (previousValue === '' || currentValue === '' || operator === null) return;
   const num1 = parseFloat(previousValue);
   const num2 = parseFloat(currentValue);
-  const results = operate(operator, num1, num2);
+  let results = operate(operator, num1, num2);
+  results = roundOff(results)
 
   if (results === "Error"){
     currentValue = "Error";
     previousValue ='';
-    operator = null;
+    operator = '';
   }else{
     previousDisplay.textContent = `${previousValue} ${operator} ${currentValue}`;
     currentValue = results.toString();
+    previousValue = currentValue; 
+    operator = '';
   }  
-  updateDisplay();  
+  updateDisplay(); 
+  
+  // equalsBtn.disabled = true; //disable equals button after calculation
 };
 
 
 function appendDecimal(decimal){
-  console.log(decimal)
+  if(!currentValue.includes(".")){
+    currentValue += decimal;
+  };
+  updateDisplay(currentValue);
+}
+
+//function round off the numbers
+function roundOff(num){
+  return Math.round(num * 100000) / 100000;
 }
 
 function appendBracket(bracket){
-  console.log(bracket)
+  currentValue += bracket;
+  updateDisplay(currentValue);
 }
 
 equalsBtn.addEventListener('click', function(e){
